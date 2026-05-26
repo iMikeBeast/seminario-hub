@@ -9,42 +9,182 @@
     <style>
         /* Pegamos aquí el CSS que me diste antes para que funcione rápido */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600;700;800&display=swap');
-        :root { --bg-primary: #0a0e1a; --accent: #6366f1; --text: #f1f5f9; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
-        .container { padding: 2rem; max-width: 600px; }
-        h1 { font-family: 'Poppins', sans-serif; font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #fff, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); padding: 2rem; border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.1); }
-        .btn { display: inline-block; margin-top: 1rem; padding: 1rem 2rem; background: var(--accent); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: transform 0.2s; }
+        :root { --bg-primary: #0a0e1a; --accent: #6366f1; --text: #f1f5f9; --card-bg: rgba(30, 41, 59, 0.7); }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text); margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .container { max-width: 600px; width: 90%; background: var(--card-bg); padding: 2rem; border-radius: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { font-family: 'Poppins', sans-serif; font-size: 2.5rem; margin-bottom: 0.5rem; background: linear-gradient(to right, #818cf8, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { color: #94a3b8; margin-bottom: 2rem; }
+        .btn { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 10px; transition: transform 0.2s; border: none; cursor: pointer; width: 80%; }
         .btn:hover { transform: translateY(-2px); }
-        .status { margin-top: 1rem; color: #10b981; font-weight: bold; }
+        .btn-outline { background: transparent; border: 2px solid #6366f1; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; box-sizing: border-box; }
+        .hidden { display: none; }
+        .status-badge { background: #064e3b; color: #6ee7b7; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin-top: 10px; }
+        #app { width: 100%; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
+
+    <div class="container" id="app">
+        <!-- VISTA DE LOGIN -->
+        <div id="login-view">
             <h1>📚 SeminarioHub</h1>
-            <p style="font-size: 1.1rem; color: #94a3b8;">Bienvenido a tu plataforma de estudio.</p>
+            <p>Plataforma de estudio inteligente</p>
             
-            <div id="app-loading" class="status">✅ Servidor Conectado</div>
-            
-            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
-                <p style="font-size: 0.9rem; color: #64748b;">¿Eres profesor o alumno?</p>
-                <button onclick="alert('Próximamente: Login de Profesor')" class="btn" style="background: #f59e0b; margin-right: 10px;">👨‍🏫 Soy Profesor</button>
-                <button onclick="alert('Próximamente: Login de Alumno')" class="btn">🎓 Soy Alumno</button>
+            <div id="login-form">
+                <input type="text" id="access-code" placeholder="Ingresa tu código de acceso">
+                <select id="role-select" style="width:100%; padding:12px; margin:10px 0; border-radius:8px; background:#1e293b; color:white; border:1px solid #334155;">
+                    <option value="alumno">Soy Alumno</option>
+                    <option value="profesor">Soy Profesor</option>
+                </select>
+                <button class="btn" onclick="handleLogin()">Entrar</button>
             </div>
+            <p id="login-error" style="color: #ef4444; display: none;">Código incorrecto</p>
+        </div>
+
+        <!-- VISTA PROFESOR -->
+        <div id="profesor-view" class="hidden">
+            <h2>👨‍🏫 Panel del Profesor</h2>
+            <div class="status-badge">✅ Conectado</div>
+            
+            <div style="margin-top: 2rem; text-align: left;">
+                <label style="color:#94a3b8; font-size:0.9rem;">Subir nuevo PDF para generar lección:</label>
+                <input type="file" id="pdf-upload" accept="application/pdf">
+                <button class="btn" onclick="uploadPDF()">Generar Lección con IA</button>
+                <p id="upload-status" style="font-size: 0.9rem; margin-top: 10px;"></p>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <h3>Estadísticas</h3>
+                <div id="stats-container">Cargando...</div>
+            </div>
+            
+            <button class="btn btn-outline" onclick="logout()" style="margin-top: 2rem;">Cerrar Sesión</button>
+        </div>
+
+        <!-- VISTA ALUMNO -->
+        <div id="alumno-view" class="hidden">
+            <h2>🎓 Mis Lecciones</h2>
+            <div class="status-badge">🟢 En línea</div>
+            
+            <div id="lessons-list" style="margin-top: 2rem; text-align: left;">
+                <p>Cargando lecciones disponibles...</p>
+            </div>
+
+            <button class="btn btn-outline" onclick="logout()" style="margin-top: 2rem;">Cerrar Sesión</button>
         </div>
     </div>
 
     <script>
-        // Script básico para conectar con la API
-        console.log("Conectando a API...");
-        fetch('/api/stats')
-            .then(res => res.json())
-            .then(data => {
-                console.log("Datos recibidos:", data);
-                document.getElementById('app-loading').innerText = `✅ Online | Lecciones: ${data.totalLecciones || 0}`;
-            })
-            .catch(err => console.error("Error conectando:", err));
+        // Lógica simple de conexión
+        const API_URL = ''; // Vacío porque estamos en el mismo dominio
+
+        async function handleLogin() {
+            const code = document.getElementById('access-code').value;
+            const role = document.getElementById('role-select').value;
+            const errorMsg = document.getElementById('login-error');
+
+            try {
+                const res = await fetch(`${API_URL}/api/access`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, role })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    errorMsg.style.display = 'none';
+                    document.getElementById('login-view').classList.add('hidden');
+                    if (role === 'profesor') {
+                        document.getElementById('profesor-view').classList.remove('hidden');
+                        loadStats();
+                    } else {
+                        document.getElementById('alumno-view').classList.remove('hidden');
+                        loadLessons();
+                    }
+                } else {
+                    errorMsg.style.display = 'block';
+                }
+            } catch (e) {
+                console.error(e);
+                errorMsg.innerText = "Error de conexión con el servidor";
+                errorMsg.style.display = 'block';
+            }
+        }
+
+        async function uploadPDF() {
+            const fileInput = document.getElementById('pdf-upload');
+            const statusMsg = document.getElementById('upload-status');
+            
+            if (fileInput.files.length === 0) {
+                statusMsg.innerText = "⚠️ Selecciona un archivo PDF primero.";
+                statusMsg.style.color = "#fbbf24";
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('pdf', fileInput.files[0]);
+
+            statusMsg.innerText = "⏳ Subiendo y procesando con IA... (esto puede tardar unos segundos)";
+            statusMsg.style.color = "#94a3b8";
+
+            try {
+                const res = await fetch(`${API_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    statusMsg.innerText = `✅ ¡Éxito! Se generaron ${data.stats.lessonsCreated} lecciones.`;
+                    statusMsg.style.color = "#10b981";
+                } else {
+                    statusMsg.innerText = "❌ Error: " + (data.error || "Falló el proceso");
+                    statusMsg.style.color = "#ef4444";
+                }
+            } catch (e) {
+                statusMsg.innerText = "❌ Error de red al subir.";
+                statusMsg.style.color = "#ef4444";
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch(`${API_URL}/api/stats`);
+                const data = await res.json();
+                document.getElementById('stats-container').innerHTML = `
+                    <div style="display:flex; justify-content:space-around; margin-top:1rem;">
+                        <div><strong>${data.totalLecciones || 0}</strong><br><small>Lecciones</small></div>
+                        <div><strong>${data.totalCompletados || 0}</strong><br><small>Completadas</small></div>
+                    </div>
+                `;
+            } catch (e) { console.error("Error stats", e); }
+        }
+
+        async function loadLessons() {
+            try {
+                const res = await fetch(`${API_URL}/api/miniclases`);
+                const lessons = await res.json();
+                const container = document.getElementById('lessons-list');
+                
+                if (lessons.length === 0) {
+                    container.innerHTML = "<p>No hay lecciones disponibles aún.</p>";
+                    return;
+                }
+
+                container.innerHTML = lessons.map(l => `
+                    <div style="background:rgba(255,255,255,0.05); padding:1rem; margin-bottom:10px; border-radius:8px;">
+                        <h4 style="margin:0 0 5px 0; color:#818cf8;">${l.palabras_clave || 'Lección'}</h4>
+                        <p style="margin:0; font-size:0.9rem; color:#cbd5e1;">Disponible para estudio</p>
+                        <button class="btn btn-outline" style="padding:5px 10px; font-size:0.8rem; margin-top:10px; width:auto;">Leer Lección</button>
+                    </div>
+                `).join('');
+            } catch (e) { console.error("Error lessons", e); }
+        }
+
+        function logout() {
+            location.reload();
+        }
     </script>
 </body>
 </html>
