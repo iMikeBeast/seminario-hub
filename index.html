@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeminarioHub</title>
+    <!-- Estilos CSS -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Pegamos aquí el CSS que me diste antes para que funcione rápido */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600;700;800&display=swap');
+        :root { --bg-primary: #0a0e1a; --accent: #6366f1; --text: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-primary); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; text-align: center; }
+        .container { padding: 2rem; max-width: 600px; }
+        h1 { font-family: 'Poppins', sans-serif; font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #fff, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); padding: 2rem; border-radius: 16px; border: 1px solid rgba(148, 163, 184, 0.1); }
+        .btn { display: inline-block; margin-top: 1rem; padding: 1rem 2rem; background: var(--accent); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: transform 0.2s; }
+        .btn:hover { transform: translateY(-2px); }
+        .status { margin-top: 1rem; color: #10b981; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>📚 SeminarioHub</h1>
+            <p style="font-size: 1.1rem; color: #94a3b8;">Bienvenido a tu plataforma de estudio.</p>
+            
+            <div id="app-loading" class="status">✅ Servidor Conectado</div>
+            
+            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+                <p style="font-size: 0.9rem; color: #64748b;">¿Eres profesor o alumno?</p>
+                <button onclick="alert('Próximamente: Login de Profesor')" class="btn" style="background: #f59e0b; margin-right: 10px;">👨‍🏫 Soy Profesor</button>
+                <button onclick="alert('Próximamente: Login de Alumno')" class="btn">🎓 Soy Alumno</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script básico para conectar con la API
+        console.log("Conectando a API...");
+        fetch('/api/stats')
+            .then(res => res.json())
+            .then(data => {
+                console.log("Datos recibidos:", data);
+                document.getElementById('app-loading').innerText = `✅ Online | Lecciones: ${data.totalLecciones || 0}`;
+            })
+            .catch(err => console.error("Error conectando:", err));
+    </script>
+</body>
+</html>
