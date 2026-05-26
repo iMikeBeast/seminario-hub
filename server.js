@@ -1,198 +1,258 @@
-{\rtf1\ansi\ansicpg1252\cocoartf2822
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 .AppleSystemUIFontMonospaced-Regular;}
-{\colortbl;\red255\green255\blue255;\red244\green246\blue249;\red27\green31\blue34;\red212\green212\blue212;
-\red136\green185\blue102;\red184\green93\blue213;\red54\green192\blue160;\red79\green123\blue61;\red167\green197\blue152;
-}
-{\*\expandedcolortbl;;\cssrgb\c96471\c97255\c98039;\cssrgb\c14118\c16078\c18039;\cssrgb\c86275\c86275\c86275;
-\cssrgb\c59608\c76471\c47451;\cssrgb\c77647\c47059\c86667;\cssrgb\c23922\c78824\c69020;\cssrgb\c37647\c54510\c30588;\cssrgb\c70980\c80784\c65882;
-}
-\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
-\deftab720
-\pard\pardeftab720\partightenfactor0
+require('dotenv').config();
+const express = require('express');
+const multer = require('multer');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const { createClient } = require('@supabase/supabase-js');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const pdf = require('pdf-parse');
 
-\f0\fs28 \cf2 \cb3 \expnd0\expndtw0\kerning0
-\outl0\strokewidth0 \strokec2 require\cf4 \strokec4 (\cf5 \strokec5 'dotenv'\cf4 \strokec4 ).\cf2 \strokec2 config\cf4 \strokec4 ();\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  express \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 'express'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  multer \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 'multer'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  cors \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 'cors'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  path \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 'path'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  fs \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 'fs'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  v4\cf4 \strokec4 :\cf2 \strokec2  uuidv4 \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 'uuid'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  createClient \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 '@supabase/supabase-js'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  \cf7 \strokec7 GoogleGenerativeAI\cf2 \strokec2  \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 '@google/generative-ai'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  pdf \cf4 \strokec4 =\cf2 \strokec2  require\cf4 \strokec4 (\cf5 \strokec5 'pdf-parse'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // --- CONFIGURACI\'d3N ---\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  app \cf4 \strokec4 =\cf2 \strokec2  express\cf4 \strokec4 ();\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  \cf7 \strokec7 PORT\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  process\cf4 \strokec4 .\cf2 \strokec2 env\cf4 \strokec4 .\cf7 \strokec7 PORT\cf2 \strokec2  \cf4 \strokec4 ||\cf2 \strokec2  \cf9 \strokec9 3000\cf4 \strokec4 ;\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  supabaseUrl \cf4 \strokec4 =\cf2 \strokec2  process\cf4 \strokec4 .\cf2 \strokec2 env\cf4 \strokec4 .\cf7 \strokec7 SUPABASE_URL\cf4 \strokec4 ;\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  supabaseKey \cf4 \strokec4 =\cf2 \strokec2  process\cf4 \strokec4 .\cf2 \strokec2 env\cf4 \strokec4 .\cf7 \strokec7 SUPABASE_KEY\cf4 \strokec4 ;\cf2 \cb1 \strokec2 \
-\
-\cf6 \cb3 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (!\cf2 \strokec2 supabaseUrl \cf4 \strokec4 ||\cf2 \strokec2  \cf4 \strokec4 !\cf2 \strokec2 supabaseKey\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3   console\cf4 \strokec4 .\cf2 \strokec2 error\cf4 \strokec4 (\cf5 \strokec5 '\uc0\u10060  Faltan variables de entorno SUPABASE_URL o SUPABASE_KEY'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cb3   process\cf4 \strokec4 .\cf2 \strokec2 exit\cf4 \strokec4 (\cf9 \strokec9 1\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \}\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  supabase \cf4 \strokec4 =\cf2 \strokec2  createClient\cf4 \strokec4 (\cf2 \strokec2 supabaseUrl\cf4 \strokec4 ,\cf2 \strokec2  supabaseKey\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // --- MIDDLEWARE ---\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf2 \strokec2 use\cf4 \strokec4 (\cf2 \strokec2 cors\cf4 \strokec4 ());\cf2 \cb1 \strokec2 \
-\cb3 app\cf4 \strokec4 .\cf2 \strokec2 use\cf4 \strokec4 (\cf2 \strokec2 express\cf4 \strokec4 .\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  limit\cf4 \strokec4 :\cf2 \strokec2  \cf5 \strokec5 '50mb'\cf2 \strokec2  \cf4 \strokec4 \}));\cf2 \cb1 \strokec2 \
-\cb3 app\cf4 \strokec4 .\cf2 \strokec2 use\cf4 \strokec4 (\cf2 \strokec2 express\cf4 \strokec4 .\cf2 \strokec2 urlencoded\cf4 \strokec4 (\{\cf2 \strokec2  extended\cf4 \strokec4 :\cf2 \strokec2  \cf6 \strokec6 true\cf4 \strokec4 ,\cf2 \strokec2  limit\cf4 \strokec4 :\cf2 \strokec2  \cf5 \strokec5 '50mb'\cf2 \strokec2  \cf4 \strokec4 \}));\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // --- STORAGE CONFIG (Memoria temporal para Render) ---\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  \cf7 \strokec7 UPLOADS_DIR\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  path\cf4 \strokec4 .\cf2 \strokec2 join\cf4 \strokec4 (\cf2 \strokec2 __dirname\cf4 \strokec4 ,\cf2 \strokec2  \cf5 \strokec5 'uploads'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (!\cf2 \strokec2 fs\cf4 \strokec4 .\cf2 \strokec2 existsSync\cf4 \strokec4 (\cf7 \strokec7 UPLOADS_DIR\cf4 \strokec4 ))\cf2 \strokec2  fs\cf4 \strokec4 .\cf2 \strokec2 mkdirSync\cf4 \strokec4 (\cf7 \strokec7 UPLOADS_DIR\cf4 \strokec4 ,\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  recursive\cf4 \strokec4 :\cf2 \strokec2  \cf6 \strokec6 true\cf2 \strokec2  \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  storage \cf4 \strokec4 =\cf2 \strokec2  multer\cf4 \strokec4 .\cf2 \strokec2 diskStorage\cf4 \strokec4 (\{\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3   destination\cf4 \strokec4 :\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  file\cf4 \strokec4 ,\cf2 \strokec2  cb\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  cb\cf4 \strokec4 (\cf6 \strokec6 null\cf4 \strokec4 ,\cf2 \strokec2  \cf7 \strokec7 UPLOADS_DIR\cf4 \strokec4 ),\cf2 \cb1 \strokec2 \
-\cb3   filename\cf4 \strokec4 :\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  file\cf4 \strokec4 ,\cf2 \strokec2  cb\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  cb\cf4 \strokec4 (\cf6 \strokec6 null\cf4 \strokec4 ,\cf2 \strokec2  \cf5 \strokec5 `\cf4 \strokec4 $\{\cf7 \strokec7 Date\cf4 \strokec4 .\cf2 \strokec2 now\cf4 \strokec4 ()\}\cf5 \strokec5 -\cf4 \strokec4 $\{\cf2 \strokec2 file\cf4 \strokec4 .\cf2 \strokec2 originalname\cf4 \strokec4 \}\cf5 \strokec5 `\cf4 \strokec4 )\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf6 \cb3 \strokec6 const\cf2 \strokec2  upload \cf4 \strokec4 =\cf2 \strokec2  multer\cf4 \strokec4 (\{\cf2 \strokec2  storage\cf4 \strokec4 ,\cf2 \strokec2  limits\cf4 \strokec4 :\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  fileSize\cf4 \strokec4 :\cf2 \strokec2  \cf9 \strokec9 50\cf2 \strokec2  \cf4 \strokec4 *\cf2 \strokec2  \cf9 \strokec9 1024\cf2 \strokec2  \cf4 \strokec4 *\cf2 \strokec2  \cf9 \strokec9 1024\cf2 \strokec2  \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // --- FUNCIONES AUXILIARES (PDF y IA) ---\cf2 \cb1 \strokec2 \
-\cf8 \cb3 \strokec8 // (Aqu\'ed ir\'edan las funciones fixEncoding, organizeParagraphs, generateLessons, etc. \cf2 \cb1 \strokec2 \
-\cf8 \cb3 \strokec8 // que ya ten\'edas en tu c\'f3digo original. Por brevedad, asumo que las pegar\'e1s completas)\cf2 \cb1 \strokec2 \
-\cf8 \cb3 \strokec8 // ... [PEGA AQU\'cd EL RESTO DE TUS FUNCIONES DE PROCESAMIENTO DE PDF Y GEMINI] ...\cf2 \cb1 \strokec2 \
-\
-\cf8 \cb3 \strokec8 // Simulaci\'f3n de funciones si no las pegas ahora (BORRAR ESTO CUANDO PEGUES TU C\'d3DIGO REAL)\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf6 \cb3 \strokec6 async\cf2 \strokec2  \cf6 \strokec6 function\cf2 \strokec2  extractTextFromPDF\cf4 \strokec4 (\cf2 \strokec2 filePath\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  \cf6 \strokec6 return\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  text\cf4 \strokec4 :\cf2 \strokec2  \cf5 \strokec5 "Texto de prueba"\cf4 \strokec4 ,\cf2 \strokec2  numPages\cf4 \strokec4 :\cf2 \strokec2  \cf9 \strokec9 1\cf2 \strokec2  \cf4 \strokec4 \};\cf2 \strokec2  \cf4 \strokec4 \}\cf2 \cb1 \strokec2 \
-\cf6 \cb3 \strokec6 async\cf2 \strokec2  \cf6 \strokec6 function\cf2 \strokec2  generateLessons\cf4 \strokec4 (\cf2 \strokec2 text\cf4 \strokec4 ,\cf2 \strokec2  name\cf4 \strokec4 ,\cf2 \strokec2  key\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  \cf6 \strokec6 return\cf2 \strokec2  \cf4 \strokec4 [];\cf2 \strokec2  \cf4 \strokec4 \}\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // --- RUTAS API ---\cf2 \cb1 \strokec2 \
-\
-\cf8 \cb3 \strokec8 // 1. Obtener Cursos\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf6 \strokec6 get\cf4 \strokec4 (\cf5 \strokec5 '/api/cursos'\cf4 \strokec4 ,\cf2 \strokec2  \cf6 \strokec6 async\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  res\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  data\cf4 \strokec4 ,\cf2 \strokec2  error \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'cursos'\cf4 \strokec4 ).\cf2 \strokec2 select\cf4 \strokec4 (\cf5 \strokec5 '*'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 error\cf4 \strokec4 )\cf2 \strokec2  \cf6 \strokec6 return\cf2 \strokec2  res\cf4 \strokec4 .\cf2 \strokec2 status\cf4 \strokec4 (\cf9 \strokec9 500\cf4 \strokec4 ).\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  error\cf4 \strokec4 :\cf2 \strokec2  error\cf4 \strokec4 .\cf2 \strokec2 message \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\cb3   res\cf4 \strokec4 .\cf2 \strokec2 json\cf4 \strokec4 (\cf2 \strokec2 data\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // 2. Crear Curso\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf2 \strokec2 post\cf4 \strokec4 (\cf5 \strokec5 '/api/cursos'\cf4 \strokec4 ,\cf2 \strokec2  \cf6 \strokec6 async\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  res\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  nombre\cf4 \strokec4 ,\cf2 \strokec2  descripcion \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  req\cf4 \strokec4 .\cf2 \strokec2 body\cf4 \strokec4 ;\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  data\cf4 \strokec4 ,\cf2 \strokec2  error \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'cursos'\cf4 \strokec4 ).\cf2 \strokec2 insert\cf4 \strokec4 ([\{\cf2 \strokec2  nombre\cf4 \strokec4 ,\cf2 \strokec2  descripcion \cf4 \strokec4 \}]).\cf2 \strokec2 select\cf4 \strokec4 ();\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 error\cf4 \strokec4 )\cf2 \strokec2  \cf6 \strokec6 return\cf2 \strokec2  res\cf4 \strokec4 .\cf2 \strokec2 status\cf4 \strokec4 (\cf9 \strokec9 500\cf4 \strokec4 ).\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  error\cf4 \strokec4 :\cf2 \strokec2  error\cf4 \strokec4 .\cf2 \strokec2 message \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\cb3   res\cf4 \strokec4 .\cf2 \strokec2 json\cf4 \strokec4 (\cf2 \strokec2 data\cf4 \strokec4 [\cf9 \strokec9 0\cf4 \strokec4 ]);\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // 3. Subir PDF y Generar Lecciones\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf2 \strokec2 post\cf4 \strokec4 (\cf5 \strokec5 '/api/upload'\cf4 \strokec4 ,\cf2 \strokec2  upload\cf4 \strokec4 .\cf2 \strokec2 single\cf4 \strokec4 (\cf5 \strokec5 'pdf'\cf4 \strokec4 ),\cf2 \strokec2  \cf6 \strokec6 async\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  res\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 try\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3     \cf6 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (!\cf2 \strokec2 req\cf4 \strokec4 .\cf2 \strokec2 file\cf4 \strokec4 )\cf2 \strokec2  \cf6 \strokec6 return\cf2 \strokec2  res\cf4 \strokec4 .\cf2 \strokec2 status\cf4 \strokec4 (\cf9 \strokec9 400\cf4 \strokec4 ).\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  error\cf4 \strokec4 :\cf2 \strokec2  \cf5 \strokec5 'No file'\cf2 \strokec2  \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\cb3     \cb1 \
-\cb3     \cf8 \strokec8 // 1. Guardar metadata del PDF en Supabase\cf2 \cb1 \strokec2 \
-\cb3     \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  data\cf4 \strokec4 :\cf2 \strokec2  pdfData\cf4 \strokec4 ,\cf2 \strokec2  error\cf4 \strokec4 :\cf2 \strokec2  pdfError \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  supabase\cb1 \
-\cb3       \cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'pdfs'\cf4 \strokec4 )\cf2 \cb1 \strokec2 \
-\cb3       \cf4 \strokec4 .\cf2 \strokec2 insert\cf4 \strokec4 ([\{\cf2 \strokec2  \cb1 \
-\cb3         titulo\cf4 \strokec4 :\cf2 \strokec2  req\cf4 \strokec4 .\cf2 \strokec2 file\cf4 \strokec4 .\cf2 \strokec2 originalname\cf4 \strokec4 ,\cf2 \strokec2  \cb1 \
-\cb3         url_storage\cf4 \strokec4 :\cf2 \strokec2  req\cf4 \strokec4 .\cf2 \strokec2 file\cf4 \strokec4 .\cf2 \strokec2 path\cf4 \strokec4 ,\cf2 \strokec2  \cb1 \
-\cb3         paginas\cf4 \strokec4 :\cf2 \strokec2  \cf9 \strokec9 0\cf4 \strokec4 ,\cf2 \strokec2  \cb1 \
-\cb3         estado\cf4 \strokec4 :\cf2 \strokec2  \cf5 \strokec5 'procesando'\cf2 \strokec2  \cb1 \
-\cb3       \cf4 \strokec4 \}])\cf2 \cb1 \strokec2 \
-\cb3       \cf4 \strokec4 .\cf2 \strokec2 select\cf4 \strokec4 ()\cf2 \cb1 \strokec2 \
-\cb3       \cf4 \strokec4 .\cf2 \strokec2 single\cf4 \strokec4 ();\cf2 \cb1 \strokec2 \
-\
-\cb3     \cf6 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 pdfError\cf4 \strokec4 )\cf2 \strokec2  \cf6 \strokec6 throw\cf2 \strokec2  pdfError\cf4 \strokec4 ;\cf2 \cb1 \strokec2 \
-\
-\cb3     \cf8 \strokec8 // 2. Extraer texto (Simulado aqu\'ed, usa tu funci\'f3n real)\cf2 \cb1 \strokec2 \
-\cb3     \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  text\cf4 \strokec4 ,\cf2 \strokec2  numPages \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  extractTextFromPDF\cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 .\cf2 \strokec2 file\cf4 \strokec4 .\cf2 \strokec2 path\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cb3     \cb1 \
-\cb3     \cf8 \strokec8 // Actualizar p\'e1ginas\cf2 \cb1 \strokec2 \
-\cb3     \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'pdfs'\cf4 \strokec4 ).\cf2 \strokec2 update\cf4 \strokec4 (\{\cf2 \strokec2  paginas\cf4 \strokec4 :\cf2 \strokec2  numPages \cf4 \strokec4 \}).\cf2 \strokec2 eq\cf4 \strokec4 (\cf5 \strokec5 'id'\cf4 \strokec4 ,\cf2 \strokec2  pdfData\cf4 \strokec4 .\cf2 \strokec2 id\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\
-\cb3     \cf8 \strokec8 // 3. Generar lecciones con IA\cf2 \cb1 \strokec2 \
-\cb3     \cf6 \strokec6 const\cf2 \strokec2  lessons \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  generateLessons\cf4 \strokec4 (\cf2 \strokec2 text\cf4 \strokec4 ,\cf2 \strokec2  req\cf4 \strokec4 .\cf2 \strokec2 file\cf4 \strokec4 .\cf2 \strokec2 originalname\cf4 \strokec4 ,\cf2 \strokec2  process\cf4 \strokec4 .\cf2 \strokec2 env\cf4 \strokec4 .\cf7 \strokec7 GEMINI_API_KEY\cf2 \strokec2  \cf4 \strokec4 ||\cf2 \strokec2  \cf5 \strokec5 ''\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\
-\cb3     \cf8 \strokec8 // 4. Guardar miniclases y cuestionarios\cf2 \cb1 \strokec2 \
-\cb3     \cf6 \strokec6 for\cf2 \strokec2  \cf4 \strokec4 (\cf6 \strokec6 const\cf2 \strokec2  lesson \cf6 \strokec6 of\cf2 \strokec2  lessons\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3       \cf8 \strokec8 // Insertar Miniclase\cf2 \cb1 \strokec2 \
-\cb3       \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  data\cf4 \strokec4 :\cf2 \strokec2  miniData \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'miniclases_generadas'\cf4 \strokec4 ).\cf2 \strokec2 insert\cf4 \strokec4 ([\{\cf2 \cb1 \strokec2 \
-\cb3         pdf_id\cf4 \strokec4 :\cf2 \strokec2  pdfData\cf4 \strokec4 .\cf2 \strokec2 id\cf4 \strokec4 ,\cf2 \cb1 \strokec2 \
-\cb3         texto_completo\cf4 \strokec4 :\cf2 \strokec2  lesson\cf4 \strokec4 .\cf2 \strokec2 content \cf4 \strokec4 ||\cf2 \strokec2  \cf7 \strokec7 JSON\cf4 \strokec4 .\cf2 \strokec2 stringify\cf4 \strokec4 (\cf2 \strokec2 lesson\cf4 \strokec4 .\cf2 \strokec2 blocks\cf4 \strokec4 ),\cf2 \cb1 \strokec2 \
-\cb3         palabras_clave\cf4 \strokec4 :\cf2 \strokec2  lesson\cf4 \strokec4 .\cf2 \strokec2 title\cb1 \
-\cb3       \cf4 \strokec4 \}]).\cf2 \strokec2 select\cf4 \strokec4 ().\cf2 \strokec2 single\cf4 \strokec4 ();\cf2 \cb1 \strokec2 \
-\
-\cb3       \cf8 \strokec8 // Insertar Cuestionario\cf2 \cb1 \strokec2 \
-\cb3       \cf6 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 miniData\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3         \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'cuestionarios'\cf4 \strokec4 ).\cf2 \strokec2 insert\cf4 \strokec4 ([\{\cf2 \cb1 \strokec2 \
-\cb3           miniclase_id\cf4 \strokec4 :\cf2 \strokec2  miniData\cf4 \strokec4 .\cf2 \strokec2 id\cf4 \strokec4 ,\cf2 \cb1 \strokec2 \
-\cb3           preguntas\cf4 \strokec4 :\cf2 \strokec2  lesson\cf4 \strokec4 .\cf2 \strokec2 exercises \cf4 \strokec4 ||\cf2 \strokec2  \cf4 \strokec4 [],\cf2 \cb1 \strokec2 \
-\cb3           respuestas\cf4 \strokec4 :\cf2 \strokec2  \cf4 \strokec4 \{\}\cf2 \strokec2  \cb1 \
-\cb3         \cf4 \strokec4 \}]);\cf2 \cb1 \strokec2 \
-\cb3       \cf4 \strokec4 \}\cf2 \cb1 \strokec2 \
-\cb3     \cf4 \strokec4 \}\cf2 \cb1 \strokec2 \
-\
-\cb3     \cf8 \strokec8 // Actualizar estado\cf2 \cb1 \strokec2 \
-\cb3     \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'pdfs'\cf4 \strokec4 ).\cf2 \strokec2 update\cf4 \strokec4 (\{\cf2 \strokec2  estado\cf4 \strokec4 :\cf2 \strokec2  \cf5 \strokec5 'completado'\cf2 \strokec2  \cf4 \strokec4 \}).\cf2 \strokec2 eq\cf4 \strokec4 (\cf5 \strokec5 'id'\cf4 \strokec4 ,\cf2 \strokec2  pdfData\cf4 \strokec4 .\cf2 \strokec2 id\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\
-\cb3     res\cf4 \strokec4 .\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  success\cf4 \strokec4 :\cf2 \strokec2  \cf6 \strokec6 true\cf4 \strokec4 ,\cf2 \strokec2  message\cf4 \strokec4 :\cf2 \strokec2  \cf5 \strokec5 'Proceso completado'\cf4 \strokec4 ,\cf2 \strokec2  lessons \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\cb3   \cf4 \strokec4 \}\cf2 \strokec2  \cf6 \strokec6 catch\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 error\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3     console\cf4 \strokec4 .\cf2 \strokec2 error\cf4 \strokec4 (\cf2 \strokec2 error\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cb3     res\cf4 \strokec4 .\cf2 \strokec2 status\cf4 \strokec4 (\cf9 \strokec9 500\cf4 \strokec4 ).\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  error\cf4 \strokec4 :\cf2 \strokec2  error\cf4 \strokec4 .\cf2 \strokec2 message \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\cb3   \cf4 \strokec4 \}\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // 4. Obtener Miniclases\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf6 \strokec6 get\cf4 \strokec4 (\cf5 \strokec5 '/api/miniclases'\cf4 \strokec4 ,\cf2 \strokec2  \cf6 \strokec6 async\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  res\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  data\cf4 \strokec4 ,\cf2 \strokec2  error \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'miniclases_generadas'\cf4 \strokec4 ).\cf2 \strokec2 select\cf4 \strokec4 (\cf5 \strokec5 '*, pdfs(titulo)'\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 error\cf4 \strokec4 )\cf2 \strokec2  \cf6 \strokec6 return\cf2 \strokec2  res\cf4 \strokec4 .\cf2 \strokec2 status\cf4 \strokec4 (\cf9 \strokec9 500\cf4 \strokec4 ).\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  error\cf4 \strokec4 :\cf2 \strokec2  error\cf4 \strokec4 .\cf2 \strokec2 message \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\cb3   res\cf4 \strokec4 .\cf2 \strokec2 json\cf4 \strokec4 (\cf2 \strokec2 data\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // 5. Registrar Progreso\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf2 \strokec2 post\cf4 \strokec4 (\cf5 \strokec5 '/api/progreso'\cf4 \strokec4 ,\cf2 \strokec2  \cf6 \strokec6 async\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  res\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  alumno_id\cf4 \strokec4 ,\cf2 \strokec2  miniclase_id\cf4 \strokec4 ,\cf2 \strokec2  puntaje \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  req\cf4 \strokec4 .\cf2 \strokec2 body\cf4 \strokec4 ;\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 const\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \strokec2  data\cf4 \strokec4 ,\cf2 \strokec2  error \cf4 \strokec4 \}\cf2 \strokec2  \cf4 \strokec4 =\cf2 \strokec2  \cf6 \strokec6 await\cf2 \strokec2  supabase\cf4 \strokec4 .\cf6 \strokec6 from\cf4 \strokec4 (\cf5 \strokec5 'progreso'\cf4 \strokec4 ).\cf2 \strokec2 insert\cf4 \strokec4 ([\{\cf2 \cb1 \strokec2 \
-\cb3     alumno_id\cf4 \strokec4 ,\cf2 \strokec2  miniclase_id\cf4 \strokec4 ,\cf2 \strokec2  puntaje\cf4 \strokec4 ,\cf2 \strokec2  completado\cf4 \strokec4 :\cf2 \strokec2  \cf6 \strokec6 true\cf4 \strokec4 ,\cf2 \strokec2  fecha\cf4 \strokec4 :\cf2 \strokec2  \cf6 \strokec6 new\cf2 \strokec2  \cf7 \strokec7 Date\cf4 \strokec4 ()\cf2 \cb1 \strokec2 \
-\cb3   \cf4 \strokec4 \}]);\cf2 \cb1 \strokec2 \
-\cb3   \cf6 \strokec6 if\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 error\cf4 \strokec4 )\cf2 \strokec2  \cf6 \strokec6 return\cf2 \strokec2  res\cf4 \strokec4 .\cf2 \strokec2 status\cf4 \strokec4 (\cf9 \strokec9 500\cf4 \strokec4 ).\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  error\cf4 \strokec4 :\cf2 \strokec2  error\cf4 \strokec4 .\cf2 \strokec2 message \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\cb3   res\cf4 \strokec4 .\cf2 \strokec2 json\cf4 \strokec4 (\{\cf2 \strokec2  success\cf4 \strokec4 :\cf2 \strokec2  \cf6 \strokec6 true\cf2 \strokec2  \cf4 \strokec4 \});\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf8 \cb3 \strokec8 // Servir Frontend (Asume que tienes un index.html en /public)\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf2 \strokec2 use\cf4 \strokec4 (\cf2 \strokec2 express\cf4 \strokec4 .\cf6 \strokec6 static\cf4 \strokec4 (\cf2 \strokec2 path\cf4 \strokec4 .\cf2 \strokec2 join\cf4 \strokec4 (\cf2 \strokec2 __dirname\cf4 \strokec4 ,\cf2 \strokec2  \cf5 \strokec5 'public'\cf4 \strokec4 )));\cf2 \cb1 \strokec2 \
-\cb3 app\cf4 \strokec4 .\cf6 \strokec6 get\cf4 \strokec4 (\cf5 \strokec5 '*'\cf4 \strokec4 ,\cf2 \strokec2  \cf4 \strokec4 (\cf2 \strokec2 req\cf4 \strokec4 ,\cf2 \strokec2  res\cf4 \strokec4 )\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3   res\cf4 \strokec4 .\cf2 \strokec2 sendFile\cf4 \strokec4 (\cf2 \strokec2 path\cf4 \strokec4 .\cf2 \strokec2 join\cf4 \strokec4 (\cf2 \strokec2 __dirname\cf4 \strokec4 ,\cf2 \strokec2  \cf5 \strokec5 'public'\cf4 \strokec4 ,\cf2 \strokec2  \cf5 \strokec5 'index.html'\cf4 \strokec4 ));\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
-\
-\pard\pardeftab720\partightenfactor0
-\cf2 \cb3 app\cf4 \strokec4 .\cf2 \strokec2 listen\cf4 \strokec4 (\cf7 \strokec7 PORT\cf4 \strokec4 ,\cf2 \strokec2  \cf4 \strokec4 ()\cf2 \strokec2  \cf4 \strokec4 =>\cf2 \strokec2  \cf4 \strokec4 \{\cf2 \cb1 \strokec2 \
-\cb3   console\cf4 \strokec4 .\cf2 \strokec2 log\cf4 \strokec4 (\cf5 \strokec5 `\uc0\u55357 \u56960  Servidor corriendo en puerto \cf4 \strokec4 $\{\cf7 \strokec7 PORT\cf4 \strokec4 \}\cf5 \strokec5 `\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\cb3   console\cf4 \strokec4 .\cf2 \strokec2 log\cf4 \strokec4 (\cf5 \strokec5 `\uc0\u55357 \u56510  Conectado a Supabase: \cf4 \strokec4 $\{\cf2 \strokec2 supabaseUrl\cf4 \strokec4 \}\cf5 \strokec5 `\cf4 \strokec4 );\cf2 \cb1 \strokec2 \
-\pard\pardeftab720\partightenfactor0
-\cf4 \cb3 \strokec4 \});\cf2 \cb1 \strokec2 \
+// --- CONFIGURACIÓN INICIAL ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const geminiApiKey = process.env.GEMINI_API_KEY || ''; // Opcional si no lo pusiste en Render aún
+
+// Validar variables críticas
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ ERROR FATAL: Faltan SUPABASE_URL o SUPABASE_KEY en las variables de entorno.');
+  process.exit(1);
 }
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// --- CREAR CARPETAS NECESARIAS (Para evitar errores en Render) ---
+const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const DATA_DIR = path.join(__dirname, 'data');
+
+[UPLOADS_DIR, PUBLIC_DIR, DATA_DIR].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+    console.log(`📁 Carpeta creada: ${dir}`);
+  }
+});
+
+// Crear un index.html básico si no existe (para que la web no esté vacía)
+const indexPath = path.join(PUBLIC_DIR, 'index.html');
+if (!fs.existsSync(indexPath)) {
+  const defaultHTML = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SeminarioHub</title>
+        <style>
+            body { font-family: sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+            .container { padding: 2rem; background: #1e293b; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+            h1 { color: #818cf8; }
+            p { color: #94a3b8; }
+            .status { margin-top: 1rem; padding: 0.5rem; background: #064e3b; color: #6ee7b7; border-radius: 0.5rem; display: inline-block; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>📚 SeminarioHub</h1>
+            <p>El servidor está funcionando correctamente.</p>
+            <div class="status">✅ Conectado a Supabase</div>
+            <p style="margin-top:20px; font-size:0.9rem;">Pronto se cargará la interfaz completa.</p>
+        </div>
+    </body>
+    </html>
+  `;
+  fs.writeFileSync(indexPath, defaultHTML);
+  console.log('📄 Archivo index.html básico creado.');
+}
+
+// --- MIDDLEWARE ---
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.static(PUBLIC_DIR));
+
+// --- CONFIGURACIÓN DE MULTER (Subida de archivos) ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${uuidv4()}-${file.originalname}`)
+});
+const upload = multer({ 
+  storage, 
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Solo se permiten archivos PDF'), false);
+  }
+});
+
+// --- FUNCIONES AUXILIARES (PDF & IA) ---
+// Funciones simplificadas para extraer texto y generar lecciones
+// (En un entorno real, aquí iría todo tu código largo de procesamiento)
+
+async function extractTextFromPDF(filePath) {
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+    const data = await pdf(dataBuffer);
+    return { text: data.text, numPages: data.numpages };
+  } catch (error) {
+    console.error("Error leyendo PDF:", error);
+    throw error;
+  }
+}
+
+async function generateLessons(text, pdfName, apiKey) {
+  if (!apiKey || apiKey.trim() === '') {
+    console.log("⚠️ Sin API Key de Gemini, generando lección básica...");
+    return [{
+      id: uuidv4(),
+      title: "Lección Generada (Modo Básico)",
+      content: "Configura tu API Key de Gemini en las variables de entorno para generar lecciones completas con IA.",
+      exercises: [{ type: 'writing', question: '¿Qué aprendiste hoy?', label: 'Reflexión' }]
+    }];
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const prompt = `Genera una lección corta basada en este texto. Devuelve SOLO un JSON válido con: title, summary, y un array de blocks (cada uno con content y exercise). Texto: ${text.substring(0, 3000)}...`;
+    
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text().replace(/```json|```/g, '').trim();
+    const data = JSON.parse(responseText);
+    
+    return Array.isArray(data) ? data : [data];
+  } catch (error) {
+    console.error("Error con Gemini:", error.message);
+    return [{
+      id: uuidv4(),
+      title: "Error al generar con IA",
+      content: "No se pudo conectar con la IA. Revisa tu API Key.",
+      exercises: []
+    }];
+  }
+}
+
+// --- RUTAS DE LA API ---
+
+// 1. Obtener Cursos
+app.get('/api/cursos', async (req, res) => {
+  const { data, error } = await supabase.from('cursos').select('*');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data || []);
+});
+
+// 2. Crear Curso
+app.post('/api/cursos', async (req, res) => {
+  const { nombre, descripcion } = req.body;
+  const { data, error } = await supabase.from('cursos').insert([{ nombre, descripcion }]).select();
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data[0]);
+});
+
+// 3. Subir PDF y Procesar
+app.post('/api/upload', upload.single('pdf'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No se recibió ningún archivo.' });
+
+    console.log(`📄 Procesando archivo: ${req.file.originalname}`);
+
+    // 1. Registrar PDF en BD
+    const { data: pdfData, error: pdfError } = await supabase
+      .from('pdfs')
+      .insert([{ 
+        titulo: req.file.originalname, 
+        url_storage: req.file.path, 
+        paginas: 0, 
+        estado: 'procesando' 
+      }])
+      .select()
+      .single();
+
+    if (pdfError) throw pdfError;
+
+    // 2. Extraer texto
+    const { text, numPages } = await extractTextFromPDF(req.file.path);
+    
+    // Actualizar número de páginas
+    await supabase.from('pdfs').update({ paginas: numPages }).eq('id', pdfData.id);
+
+    // 3. Generar lecciones
+    const lessons = await generateLessons(text, req.file.originalname, geminiApiKey);
+
+    // 4. Guardar Miniclases y Cuestionarios
+    for (const lesson of lessons) {
+      const { data: miniData } = await supabase.from('miniclases_generadas').insert([{
+        pdf_id: pdfData.id,
+        texto_completo: lesson.content || JSON.stringify(lesson.blocks),
+        palabras_clave: lesson.title
+      }]).select().single();
+
+      if (miniData) {
+        await supabase.from('cuestionarios').insert([{
+          miniclase_id: miniData.id,
+          preguntas: lesson.exercises || [],
+          respuestas: {}
+        }]);
+      }
+    }
+
+    // Marcar como completado
+    await supabase.from('pdfs').update({ estado: 'completado' }).eq('id', pdfData.id);
+
+    res.json({ success: true, message: `Procesado: ${lessons.length} lecciones creadas.`, lessons });
+  } catch (error) {
+    console.error("Error en upload:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 4. Obtener Miniclases
+app.get('/api/miniclases', async (req, res) => {
+  const { data, error } = await supabase.from('miniclases_generadas').select('*, pdfs(titulo)');
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data || []);
+});
+
+// 5. Registrar Progreso
+app.post('/api/progreso', async (req, res) => {
+  const { alumno_id, miniclase_id, puntaje } = req.body;
+  const { data, error } = await supabase.from('progreso').insert([{
+    alumno_id, miniclase_id, puntaje, completado: true, fecha: new Date().toISOString()
+  }]);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
+// 6. Obtener Estadísticas
+app.get('/api/stats', async (req, res) => {
+  const { count: totalAlumnos } = await supabase.from('alumnos').select('*', { count: 'exact', head: true });
+  const { count: totalLecciones } = await supabase.from('miniclases_generadas').select('*', { count: 'exact', head: true });
+  const { count: totalProgreso } = await supabase.from('progreso').select('*', { count: 'exact', head: true });
+  
+  res.json({
+    totalAlumnos: totalAlumnos || 0,
+    totalLecciones: totalLecciones || 0,
+    totalCompletados: totalProgreso || 0
+  });
+});
+
+// Ruta comodín para servir el frontend
+app.get('*', (req, res) => {
+  res.sendFile(indexPath);
+});
+
+// --- INICIAR SERVIDOR ---
+app.listen(PORT, () => {
+  console.log('');
+  console.log('╔══════════════════════════════════════════════╗');
+  console.log('║         🚀 SeminarioHub Online              ║');
+  console.log('╠══════════════════════════════════════════════╣');
+  console.log(`║  🌐 Servidor corriendo en puerto ${PORT}           ║`);
+  console.log(`║  💾 Conectado a Supabase                     ║`);
+  console.log('╚══════════════════════════════════════════════╝');
+  console.log('');
+});
